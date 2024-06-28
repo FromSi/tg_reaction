@@ -47,8 +47,6 @@ func main() {
 	bot.Handle(tele.OnSticker, func(context tele.Context) error {
 		text := context.Message().Sticker.UniqueID
 
-		log.Println(context.Message().Sticker.UniqueID)
-
 		sendReaction(bot, context, text)
 
 		return nil
@@ -58,14 +56,14 @@ func main() {
 }
 
 func sendReaction(bot *tele.Bot, context tele.Context, text string) {
-	userId := context.Sender().Recipient()
+	chatId := context.Chat().ID
 	messageId := context.Message().ID
 
 	matches := regex.FindAllString(text, -1)
 
 	if matches != nil {
 		params := map[string]interface{}{
-			"chat_id":    userId,
+			"chat_id":    chatId,
 			"message_id": messageId,
 			"reaction": []map[string]string{
 				{
