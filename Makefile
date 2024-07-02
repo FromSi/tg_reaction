@@ -1,5 +1,7 @@
 .PHONY: build
 build:
-	docker build . -t ghcr.io/fromsi/tg_reaction:latest
+	CGO_ENABLED=0 GOOS=linux go build -o tg_reaction .
 
-docker run --rm -e TG_REACTION_TOKEN="6213811905:AAHZnBTM4lmthRH--aWZlPotW8TT5uyEVjs" -e TG_REACTION_REGEX="(?i)(вечер|утро)" ghcr.io/fromsi/tg_reaction:latest
+.PHONY: docker_build
+docker_build:
+	docker build . -t ghcr.io/fromsi/tg_reaction:latest
