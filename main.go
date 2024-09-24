@@ -2,24 +2,23 @@ package main
 
 import (
 	"log"
-	"math/rand"
 	"os"
-	"regexp"
+	"strings"
 	"time"
 
 	tele "gopkg.in/telebot.v3"
-)
-
-var (
-	emoji      = []string{"👍", "❤️", "🔥", "🥰", "👏", "😁", "🤔", "🤯", "🎉", "🤩", "🙏", "👌", "🕊", "🤡", "🥱", "🥴", "😍", "🐳", "❤️‍🔥", "🌚", "🌭", "💯", "🤣", "⚡️", "🍌", "🏆", "🤨", "😐", "🍓", "🍾", "💋", "😈", "😴", "🤓", "👻", "👨‍💻", "👀", "🎃", "🙈", "😇", "🤝", "✍️", "🤗", "🫡", "🎅", "🎄", "☃️", "💅", "🤪", "🗿", "🆒", "💘", "🙉", "🦄", "😘", "💊", "🙊", "😎", "👾", "🫶", "✌️", "💪", "🙌", "🤠", "😯", "🤩", "🤌", "💯", "🔧", "💣", "📈", "🚑"}
-	emojiTotal = len(emoji)
-	regex      = regexp.MustCompile(os.Getenv("TG_REACTION_REGEX"))
 )
 
 func main() {
 	pref := tele.Settings{
 		Token:  os.Getenv("TG_REACTION_TOKEN"),
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
+	}
+
+	regexWithEmoji, err := NewRegexWithEmoji(os.Getenv("TG_REACTION_DATA"))
+
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	bot, err := tele.NewBot(pref)
@@ -31,7 +30,7 @@ func main() {
 	bot.Handle(tele.OnText, func(context tele.Context) error {
 		text := context.Text()
 
-		sendReaction(bot, context, text)
+		sendReaction(bot, context, text, regexWithEmoji)
 
 		return nil
 	})
@@ -39,7 +38,19 @@ func main() {
 	bot.Handle(tele.OnDocument, func(context tele.Context) error {
 		text := context.Message().Document.UniqueID
 
-		sendReaction(bot, context, text)
+		sendReaction(bot, context, text, regexWithEmoji)
+
+		return nil
+	})
+
+	bot.Handle(tele.OnMedia, func(context tele.Context) error {
+		var text strings.Builder
+
+		text.WriteString(context.Message().Document.UniqueID)
+		text.WriteRune(' ')
+		text.WriteString(context.Message().Caption)
+
+		sendReaction(bot, context, text.String(), regexWithEmoji)
 
 		return nil
 	})
@@ -47,7 +58,7 @@ func main() {
 	bot.Handle(tele.OnSticker, func(context tele.Context) error {
 		text := context.Message().Sticker.UniqueID
 
-		sendReaction(bot, context, text)
+		sendReaction(bot, context, text, regexWithEmoji)
 
 		return nil
 	})
@@ -55,20 +66,20 @@ func main() {
 	bot.Start()
 }
 
-func sendReaction(bot *tele.Bot, context tele.Context, text string) {
+func sendReaction(bot *tele.Bot, context tele.Context, text string, regexWithEmoji *RegexWithEmoji) {
 	chatId := context.Chat().ID
 	messageId := context.Message().ID
 
-	matches := regex.FindAllString(text, -1)
+	emoji := regexWithEmoji.GetEmoji(text)
 
-	if matches != nil {
+	if emoji != "" {
 		params := map[string]interface{}{
 			"chat_id":    chatId,
 			"message_id": messageId,
 			"reaction": []map[string]string{
 				{
 					"type":  "emoji",
-					"emoji": emoji[rand.Intn(emojiTotal)],
+					"emoji": emoji,
 				},
 			},
 		}
