@@ -46,8 +46,11 @@ func main() {
 	bot.Handle(tele.OnMedia, func(context tele.Context) error {
 		var text strings.Builder
 
-		text.WriteString(context.Message().Document.UniqueID)
-		text.WriteRune(' ')
+		if context.Message().Document != nil {
+			text.WriteString(context.Message().Document.UniqueID)
+			text.WriteRune(' ')
+		}
+
 		text.WriteString(context.Message().Caption)
 
 		sendReaction(bot, context, text.String(), regexWithEmoji)
