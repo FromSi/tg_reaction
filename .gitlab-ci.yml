@@ -28,7 +28,7 @@ build_image:
 
 deploy_production:
   image: kroniak/ssh-client
-  stage: build
+  stage: deploy
   variables:
     GIT_STRATEGY: none
   needs:
