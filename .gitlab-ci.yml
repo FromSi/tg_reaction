@@ -23,5 +23,5 @@ build_image:
   extends: .docker_common
   stage: build
   script:
-    docker build . -t ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
-    docker push
+    - docker build . -t ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
+    - docker push
