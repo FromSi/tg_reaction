@@ -44,7 +44,7 @@ deploy_production:
     - chmod 644 ~/.ssh/known_hosts
     - echo --------------Deploy--------------
     - ssh "$TGR_DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker pull ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}"
-    - ssh "$TGR_DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker run --rm
+    - ssh "$TGR_DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker run --rm --detach
         -e TG_REACTION_TOKEN=\"${BOT_TOKEN}\"
         -e TG_REACTION_DATA=\"${REACTIONS_DATA}\"
         ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}"
