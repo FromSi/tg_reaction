@@ -24,4 +24,4 @@ build_image:
   stage: build
   script:
     - docker build . -t ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
-    - docker push
+    - docker push ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
