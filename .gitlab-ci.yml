@@ -9,7 +9,7 @@ variables:
 
 stages:
   - build
-  # - deploy
+  - deploy
 
 .docker_common:
   image: docker:20.10.16
@@ -25,3 +25,27 @@ build_image:
   script:
     - docker build . -t ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
     - docker push ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
+
+deploy_production:
+  image: kroniak/ssh-client
+  stage: build
+  variables:
+    GIT_STRATEGY: none
+  needs:
+    - build_image
+  dependencies:
+    - build_image
+  script:
+    - echo Will be implemented
+    # - echo --------------SSH--------------
+    # - eval $(ssh-agent -s)
+    # - echo "$TGR_DEPLOY_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    # - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    # - ssh-keyscan "$TGR_DEPLOY_HOST" >> ~/.ssh/known_hosts
+    # - chmod 644 ~/.ssh/known_hosts
+    # - echo --------------Deploy--------------
+    # - ssh "$TGR_DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker pull ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}"
+    # - ssh "$TGR_DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker run --rm
+    #     -e TG_REACTION_TOKEN=\"${BOT_TOKEN}\"
+    #     -e TG_REACTION_DATA=\"${REACTIONS_DATA}\"
+    #     ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}"
