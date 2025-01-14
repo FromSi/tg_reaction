@@ -1,0 +1,27 @@
+workflow:
+  rules:
+    # коммит в master
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+variables:
+  HARBOR_LIBRARY: ${HARBOR_HOST}/library
+  HARBOR_IMAGE: ${HARBOR_HOST}/apps/${CI_PROJECT_NAME}
+
+stages:
+  - build
+  # - deploy
+
+.docker_common:
+  image: docker:20.10.16
+  before_script:
+    - docker login -u $HARBOR_USERNAME -p $HARBOR_PASSWORD $HARBOR_HOST
+  after_script:
+    - docker logout $HARBOR_HOST
+
+
+build_image:
+  extends: .docker_common
+  stage: build
+  script:
+    docker build . -t ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
+    docker push
