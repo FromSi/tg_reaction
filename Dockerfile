@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS build
+FROM golang:1.24-alpine AS build
 
 WORKDIR /app
 
@@ -7,12 +7,13 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o myapp .
+RUN CGO_ENABLED=0 GOOS=linux go build -o myapp ./cmd/tg_bot/main.go
 
 FROM alpine:edge
 
 WORKDIR /app
 
 COPY --from=build /app/myapp .
+COPY --from=build /app/config.json .
 
 ENTRYPOINT ["/app/myapp"]

@@ -1,3 +1,9 @@
 tg_reaction
+
 .idea
-heap.out
+mem.prof
+cpu.prof
+config.yml
+local.sqlite
+coverage.out
+filtered_coverage.out
