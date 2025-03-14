@@ -30,7 +30,6 @@ build_image:
   stage: build
   before_script:
     - docker login -u $HARBOR_USERNAME -p $HARBOR_PASSWORD $HARBOR_HOST
-    - docker system prune -af
   script:
     - docker build . -t ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
     - docker push ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
