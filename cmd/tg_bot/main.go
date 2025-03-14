@@ -99,6 +99,10 @@ func CreateApp() fx.Option {
 				use_case.NewBaseClearReactionUseCase,
 				fx.As(new(use_case.ClearReactionUseCase)),
 			),
+			fx.Annotate(
+				use_case.NewBasePoopReactionUseCase,
+				fx.As(new(use_case.PoopReactionUseCase)),
+			),
 
 			fx.Annotate(
 				routes.NewTextRoute,
@@ -157,6 +161,16 @@ func CreateApp() fx.Option {
 			),
 			fx.Annotate(
 				routes.NewPinnedMessageRoute,
+				fx.As(new(routes.Route)),
+				routeAnnotationGroup,
+			),
+			fx.Annotate(
+				routes.NewVoiceRoute,
+				fx.As(new(routes.Route)),
+				routeAnnotationGroup,
+			),
+			fx.Annotate(
+				routes.NewVideoNoteRoute,
 				fx.As(new(routes.Route)),
 				routeAnnotationGroup,
 			),

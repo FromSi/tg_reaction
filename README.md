@@ -37,6 +37,11 @@ The bot can send several types of emoji reactions in response to different event
 ### 4. Interactive Content
 - Sends 🏆 (Trophy) reaction when a dice roll results in a winning value (6)
 
+### 5. Media Messages
+- Sends 💩 (Poop) reaction when:
+  - Voice messages are shared
+  - Video notes (round videos) are shared
+
 ## Running via Docker
 ```bash
 docker pull ghcr.io/fromsi/tg_reaction:latest
