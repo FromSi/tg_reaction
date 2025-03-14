@@ -1,0 +1,53 @@
+workflow:
+  rules:
+    # коммит в master
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+variables:
+  HARBOR_LIBRARY: ${HARBOR_HOST}/library
+  HARBOR_IMAGE: ${HARBOR_HOST}/apps/${CI_PROJECT_NAME}
+
+stages:
+  - build
+  - deploy
+
+.docker_common:
+  image: docker:20.10.16
+  before_script:
+    - docker login -u $HARBOR_USERNAME -p $HARBOR_PASSWORD $HARBOR_HOST
+  after_script:
+    - docker logout $HARBOR_HOST
+
+
+build_image:
+  extends: .docker_common
+  stage: build
+  script:
+    - docker build . -t ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
+    - docker push ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
+
+deploy_production:
+  image: kroniak/ssh-client
+  stage: deploy
+  variables:
+    GIT_STRATEGY: none
+  needs:
+    - build_image
+  dependencies:
+    - build_image
+  script:
+    - echo --------------SSH--------------
+    - eval $(ssh-agent -s)
+    - echo "$DEPLOY_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh-keyscan "$TGR_DEPLOY_HOST" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - echo --------------Deploy--------------
+    - ssh "$DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker pull ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}"
+    - ssh "$DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker rm -f ${CI_PROJECT_NAME} &>/dev/null && echo 'Removed old container'"
+    - ssh "$DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker run --rm --detach --name ${CI_PROJECT_NAME}
+        -e TG_REACTION_TOKEN=\"${BOT_TOKEN}\"
+        -e TG_REACTION_DATA=\"${REACTIONS_DATA}\"
+        ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}"
+  rules:
+    - when: manual
