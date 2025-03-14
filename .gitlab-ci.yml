@@ -8,8 +8,22 @@ variables:
   HARBOR_IMAGE: ${HARBOR_HOST}/apps/${CI_PROJECT_NAME}
 
 stages:
+  - test
+  - lint
   - build
   - deploy
+
+test:
+  image: golang:1.24
+  stage: test
+  script:
+    - go test -v -coverpkg=./internal/...,./pkg/... ./...
+
+lint:
+  image: golangci/golangci-lint:v1.64
+  stage: lint
+  script:
+    - golangci-lint run -v
 
 .docker_common:
   image: docker:20.10.16
@@ -46,8 +60,7 @@ deploy_production:
     - ssh "$DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker pull ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}"
     - ssh "$DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker rm -f ${CI_PROJECT_NAME} &>/dev/null && echo 'Removed old container'"
     - ssh "$DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker run --rm --detach --name ${CI_PROJECT_NAME}
-        -e TG_REACTION_TOKEN=\"${BOT_TOKEN}\"
-        -e TG_REACTION_DATA=\"${REACTIONS_DATA}\"
+        -e APP_TELEGRAM_TOKEN=\"${BOT_TOKEN}\"
         ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}"
   rules:
     - when: manual
