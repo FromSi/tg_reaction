@@ -21,8 +21,8 @@
 
 ```bash
 # Запуск
-make run               # Запуск Telegram бота
-make run_print_json    # Запуск утилиты печати конфигурации
+make run APP_TELEGRAM_TOKEN=your_token_here    # Запуск Telegram бота
+make run_print_json                            # Запуск утилиты печати конфигурации
 
 # Тестирование
 make test              # Запуск тестов
@@ -42,6 +42,23 @@ make build             # Сборка для Linux
 make docker_build      # Сборка Docker образа
 make docker_run_img APP_TELEGRAM_TOKEN=your_token_here    # Запуск в Docker
 make docker_push       # Публикация образа в ghcr.io
+```
+
+## Переменные окружения
+
+Для работы приложения требуются следующие переменные окружения:
+
+- `APP_TELEGRAM_TOKEN` - токен Telegram бота, полученный от @BotFather
+
+Вы можете передать переменную непосредственно при выполнении команды:
+```bash
+make run APP_TELEGRAM_TOKEN=your_token_here
+```
+
+Или установить её перед запуском:
+```bash
+export APP_TELEGRAM_TOKEN=your_token_here
+make run
 ```
 
 ## Зависимости

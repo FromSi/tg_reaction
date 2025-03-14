@@ -19,6 +19,7 @@ The bot can send several types of emoji reactions in response to different event
 - Sends various reactions based on regex patterns defined in the configuration
 - Can use different reactions during holidays and special events
 - Supports multiple regex patterns and random selection from multiple emojis
+- Updates reactions on edited messages: when a message is edited, the bot removes the previous reaction and applies a new one based on the updated text
 
 ### 2. Group Events
 - Sends 🎉 (Party) reaction when:

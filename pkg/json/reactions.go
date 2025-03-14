@@ -9,6 +9,7 @@ type Reaction string
 
 // All valid reactions
 const (
+	Empty          Reaction = "" // Empty reaction for clearing
 	ThumbsUp       Reaction = "👍"
 	ThumbsDown     Reaction = "👎"
 	Heart          Reaction = "❤️"

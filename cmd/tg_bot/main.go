@@ -95,6 +95,10 @@ func CreateApp() fx.Option {
 				use_case.NewBaseDiceReactionUseCase,
 				fx.As(new(use_case.DiceReactionUseCase)),
 			),
+			fx.Annotate(
+				use_case.NewBaseClearReactionUseCase,
+				fx.As(new(use_case.ClearReactionUseCase)),
+			),
 
 			fx.Annotate(
 				routes.NewTextRoute,
@@ -143,6 +147,11 @@ func CreateApp() fx.Option {
 			),
 			fx.Annotate(
 				routes.NewChatPhotoDeletedRoute,
+				fx.As(new(routes.Route)),
+				routeAnnotationGroup,
+			),
+			fx.Annotate(
+				routes.NewEditedMessageRoute,
 				fx.As(new(routes.Route)),
 				routeAnnotationGroup,
 			),

@@ -1,8 +1,10 @@
 default: help
 
+APP_TELEGRAM_TOKEN ?= # Telegram bot token
+
 .PHONY: run
-run: ## running a telegram bot via linux
-	go run ./cmd/tg_bot/main.go
+run: ## running a telegram bot via linux. APP_TELEGRAM_TOKEN is required
+	APP_TELEGRAM_TOKEN=$(APP_TELEGRAM_TOKEN) go run ./cmd/tg_bot/main.go
 
 .PHONY: run_print_json
 run_print_json: ## running a json printer via linux
@@ -46,8 +48,6 @@ build: ## build app for linux
 .PHONY: docker_build
 docker_build: ## build app for docker
 	docker build . -t ghcr.io/fromsi/tg_reaction:latest
-
-APP_TELEGRAM_TOKEN ?= # Telegram bot token
 
 .PHONY: docker_run_img
 docker_run_img: ## run telegram bot via docker. APP_TELEGRAM_TOKEN is required

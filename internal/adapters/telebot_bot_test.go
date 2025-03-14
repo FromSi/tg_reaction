@@ -12,24 +12,51 @@ import (
 func TestTelebotBotAdapter_SetMessageReaction(t *testing.T) {
 	mockController := gomock.NewController(t)
 	defer mockController.Finish()
-	
+
 	mockTelebot := adapters_mocks.NewMockTeleBot(mockController)
 	telebotBotAdapter := NewTelebotBotAdapter(mockTelebot)
 
-	chatId := int64(123456789)
-	messageId := 123
-	reaction := json.ThumbsUp
+	chatId := int64(12345)
+	messageId := 67890
+	reaction := json.Fire
 
 	mockTelebot.EXPECT().Raw("setMessageReaction", gomock.Eq(
 		map[string]interface{}{
 			"chat_id":    chatId,
 			"message_id": messageId,
+			"is_big":     true,
 			"reaction": []map[string]string{
-				{"type": "emoji", "emoji": string(reaction)},
+				{
+					"type":  "emoji",
+					"emoji": string(reaction),
+				},
 			},
-		},
-	)).Return(nil, nil)
+		})).Return(nil, nil)
 
 	err := telebotBotAdapter.SetMessageReaction(chatId, messageId, reaction)
+	assert.NoError(t, err, "Expected no error, got %v", err)
+}
+
+func TestTelebotBotAdapter_SetMessageReaction_EmptyReaction(t *testing.T) {
+	mockController := gomock.NewController(t)
+	defer mockController.Finish()
+
+	mockTelebot := adapters_mocks.NewMockTeleBot(mockController)
+	telebotBotAdapter := NewTelebotBotAdapter(mockTelebot)
+
+	chatId := int64(12345)
+	messageId := 67890
+	reaction := json.Empty
+
+	mockTelebot.EXPECT().Raw("setMessageReaction", gomock.Eq(
+		map[string]interface{}{
+			"chat_id":    chatId,
+			"message_id": messageId,
+			"is_big":     true,
+			"reaction":   []map[string]string{},
+		})).Return(nil, nil)
+
+	err := telebotBotAdapter.SetMessageReaction(chatId, messageId, reaction)
+
 	assert.NoError(t, err, "Expected no error, got %v", err)
 }
