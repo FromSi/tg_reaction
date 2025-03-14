@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/fromsi/tg_reaction/internal/adapters"
@@ -30,6 +31,7 @@ type FxAfterParams struct {
 }
 
 func main() {
+	os.Setenv("APP_TELEGRAM_TOKEN", "6213811905:AAHZnBTM4lmthRH--aWZlPotW8TT5uyEVjs")
 	fx.New(CreateApp()).Run()
 }
 
@@ -43,10 +45,10 @@ func CreateApp() fx.Option {
 
 	return fx.Options(
 		fx.Provide(
-			func () *json.Config {
+			func() *json.Config {
 				return configJson
 			},
-			
+
 			func(fxBeforeParams FxBeforeParams) (adapters.TeleBot, error) {
 				return NewTelegramBot(fxBeforeParams)
 			},
@@ -70,10 +72,30 @@ func CreateApp() fx.Option {
 				services.NewBaseTelebotMethodService,
 				fx.As(new(services.TelebotMethodService)),
 			),
+			fx.Annotate(
+				services.NewBaseDiceService,
+				fx.As(new(services.DiceService)),
+			),
 
 			fx.Annotate(
 				use_case.NewBaseRegexReactionUseCase,
 				fx.As(new(use_case.RegexReactionUseCase)),
+			),
+			fx.Annotate(
+				use_case.NewBasePartyReactionUseCase,
+				fx.As(new(use_case.PartyReactionUseCase)),
+			),
+			fx.Annotate(
+				use_case.NewBaseCryLoudReactionUseCase,
+				fx.As(new(use_case.CryLoudReactionUseCase)),
+			),
+			fx.Annotate(
+				use_case.NewBaseEyesReactionUseCase,
+				fx.As(new(use_case.EyesReactionUseCase)),
+			),
+			fx.Annotate(
+				use_case.NewBaseDiceReactionUseCase,
+				fx.As(new(use_case.DiceReactionUseCase)),
 			),
 
 			fx.Annotate(
@@ -87,12 +109,47 @@ func CreateApp() fx.Option {
 				routeAnnotationGroup,
 			),
 			fx.Annotate(
+				routes.NewDiceRoute,
+				fx.As(new(routes.Route)),
+				routeAnnotationGroup,
+			),
+			fx.Annotate(
 				routes.NewDocumentRoute,
 				fx.As(new(routes.Route)),
 				routeAnnotationGroup,
 			),
 			fx.Annotate(
 				routes.NewStickerRoute,
+				fx.As(new(routes.Route)),
+				routeAnnotationGroup,
+			),
+			fx.Annotate(
+				routes.NewNewChatPhotoRoute,
+				fx.As(new(routes.Route)),
+				routeAnnotationGroup,
+			),
+			fx.Annotate(
+				routes.NewNewChatTitleRoute,
+				fx.As(new(routes.Route)),
+				routeAnnotationGroup,
+			),
+			fx.Annotate(
+				routes.NewNewMemberRoute,
+				fx.As(new(routes.Route)),
+				routeAnnotationGroup,
+			),
+			fx.Annotate(
+				routes.NewLeftChatMemberRoute,
+				fx.As(new(routes.Route)),
+				routeAnnotationGroup,
+			),
+			fx.Annotate(
+				routes.NewChatPhotoDeletedRoute,
+				fx.As(new(routes.Route)),
+				routeAnnotationGroup,
+			),
+			fx.Annotate(
+				routes.NewPinnedMessageRoute,
 				fx.As(new(routes.Route)),
 				routeAnnotationGroup,
 			),
