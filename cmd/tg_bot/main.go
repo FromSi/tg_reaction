@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/fromsi/tg_reaction/internal/adapters"
@@ -31,7 +30,6 @@ type FxAfterParams struct {
 }
 
 func main() {
-	os.Setenv("APP_TELEGRAM_TOKEN", "6213811905:AAHZnBTM4lmthRH--aWZlPotW8TT5uyEVjs")
 	fx.New(CreateApp()).Run()
 }
 

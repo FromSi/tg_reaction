@@ -13,6 +13,14 @@
             "reactions": ["🗿"]
         },
         {
+            "pattern": "horse come",
+            "reactions": ["🔥"]
+        },
+        {
+            "pattern": "horse left",
+            "reactions": ["🕊"]
+        },
+        {
             "pattern": "хомяк|хомяком|хомяка",
             "reactions": ["🤗", "🫡", "😘"]
         },
