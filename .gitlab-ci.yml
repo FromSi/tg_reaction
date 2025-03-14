@@ -25,20 +25,17 @@ lint:
   script:
     - golangci-lint run -v
 
-.docker_common:
+build_image:
   image: docker:20.10.16
+  stage: build
   before_script:
     - docker login -u $HARBOR_USERNAME -p $HARBOR_PASSWORD $HARBOR_HOST
-  after_script:
-    - docker logout $HARBOR_HOST
-
-
-build_image:
-  extends: .docker_common
-  stage: build
+    - docker system prune -af
   script:
     - docker build . -t ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
     - docker push ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}
+  after_script:
+    - docker logout $HARBOR_HOST
 
 deploy_production:
   image: kroniak/ssh-client
