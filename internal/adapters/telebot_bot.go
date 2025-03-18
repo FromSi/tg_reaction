@@ -1,6 +1,8 @@
 package adapters
 
 import (
+	"strings"
+
 	"github.com/fromsi/tg_reaction/pkg/json"
 )
 
@@ -30,6 +32,12 @@ func (receiver *TelebotBotAdapter) SetMessageReaction(chatId int64, messageId in
 	}
 
 	_, err := receiver.bot.Raw("setMessageReaction", params)
+
+	// Ignore the REACTION_EMPTY error, which occurs
+	// when trying to remove a reaction that doesn't exist
+	if err != nil && strings.Contains(err.Error(), "Bad Request: REACTION_EMPTY") {
+		return nil
+	}
 
 	return err
 }
