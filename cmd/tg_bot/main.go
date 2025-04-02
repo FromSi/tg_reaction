@@ -63,6 +63,11 @@ func CreateApp() fx.Option {
 			),
 
 			fx.Annotate(
+				services.NewBaseClockService,
+				fx.As(new(services.ClockService)),
+			),
+
+			fx.Annotate(
 				services.NewBaseRegexService,
 				fx.As(new(services.RegexService)),
 			),

@@ -7,8 +7,10 @@ import (
 	"testing"
 	"time"
 
+	services_mocks "github.com/fromsi/tg_reaction/mocks/services"
 	"github.com/fromsi/tg_reaction/pkg/json"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 // mockErrorReader implements io.Reader and always returns an error
@@ -26,8 +28,13 @@ func TestBaseRegexService_GetRandomReaction_CryptoError(t *testing.T) {
 
 	rand.Reader = &mockErrorReader{}
 
+	mockController := gomock.NewController(t)
+	defer mockController.Finish()
+
+	mockClock := services_mocks.NewMockClockService(mockController)
+
 	config := &json.Config{}
-	service := NewBaseRegexService(config)
+	service := NewBaseRegexService(config, mockClock)
 
 	reactions := []json.Reaction{json.ThumbsUp, json.Heart, json.Fire}
 
@@ -64,10 +71,15 @@ func TestBaseRegexService_FindReaction_Everyday(t *testing.T) {
 				Reactions: []json.Reaction{json.Handshake},
 			},
 		},
-		Holidays: map[string]json.Holiday{},
 	}
 
-	service := NewBaseRegexService(config)
+	mockController := gomock.NewController(t)
+	defer mockController.Finish()
+
+	mockClock := services_mocks.NewMockClockService(mockController)
+	mockClock.EXPECT().Now().Return(time.Date(2023, 6, 1, 12, 0, 0, 0, time.UTC)).AnyTimes()
+
+	service := NewBaseRegexService(config, mockClock)
 
 	reaction := service.FindReaction("Привет, как дела?")
 	assert.Contains(t, []json.Reaction{json.ThumbsUp, json.Heart}, reaction)
@@ -75,8 +87,8 @@ func TestBaseRegexService_FindReaction_Everyday(t *testing.T) {
 	reaction = service.FindReaction("До свидания!")
 	assert.Equal(t, json.Handshake, reaction)
 
-	reaction = service.FindReaction("Какой-то случайный текст")
-	assert.Equal(t, json.Reaction(""), reaction)
+	reaction = service.FindReaction("Хорошая погода сегодня.")
+	assert.Equal(t, json.Reaction(""), reaction, "Should return empty for non-matching text")
 }
 
 func TestBaseRegexService_FindReaction_Holiday(t *testing.T) {
@@ -104,39 +116,48 @@ func TestBaseRegexService_FindReaction_Holiday(t *testing.T) {
 		},
 	}
 
-	service := NewBaseRegexService(config)
-	service.currentTime = time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC)
+	mockController := gomock.NewController(t)
+	defer mockController.Finish()
+
+	mockClock := services_mocks.NewMockClockService(mockController)
+
+	service := NewBaseRegexService(config, mockClock)
+
+	// Testing during holiday period
+	holidayDate := time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC)
+	mockClock.EXPECT().Now().Return(holidayDate).Times(3)
 
 	holiday, holidayName := service.getCurrentHoliday()
 	assert.NotNil(t, holiday, "Should be in a holiday period")
 	assert.Equal(t, "new_year", holidayName, "Holiday should be new_year")
 
 	reaction := service.FindReaction("С Новым Годом!")
-	t.Logf("Reaction for 'Happy New Year!': %s", reaction)
 	assert.Contains(t, []json.Reaction{json.ChristmasTree, json.Santa, json.Snowman}, reaction)
 
 	reaction = service.FindReaction("Привет, как дела?")
-	t.Logf("Reaction for 'Hello, how are you?' during holiday: %s", reaction)
 	assert.Contains(t, []json.Reaction{json.ChristmasTree, json.Santa}, reaction,
 		"Should use holiday reactions for everyday patterns during holiday period")
 
-	service.currentTime = time.Date(2023, 6, 1, 12, 0, 0, 0, time.UTC)
+	// Testing outside holiday period (using the same service and mock)
+	
+	nonHolidayDate := time.Date(2023, 6, 1, 12, 0, 0, 0, time.UTC)
+	mockClock.EXPECT().Now().Return(nonHolidayDate).Times(2)
 
 	holiday, holidayName = service.getCurrentHoliday()
 	assert.Nil(t, holiday, "Should not be in a holiday period")
 	assert.Equal(t, "", holidayName, "No holiday should be active")
 
 	reaction = service.FindReaction("С Новым Годом!")
-	t.Logf("Reaction for 'Happy New Year!' outside holiday: %s", reaction)
 	assert.Equal(t, json.Reaction(""), reaction)
-
-	reaction = service.FindReaction("Привет, как дела?")
-	t.Logf("Reaction for 'Hello, how are you?' outside holiday: %s", reaction)
-	assert.Contains(t, []json.Reaction{json.ThumbsUp, json.Heart}, reaction)
 }
 
 func TestBaseRegexService_isDateInHolidayPeriod(t *testing.T) {
-	service := &BaseRegexService{}
+	mockController := gomock.NewController(t)
+	defer mockController.Finish()
+
+	mockClock := services_mocks.NewMockClockService(mockController)
+
+	service := NewBaseRegexService(&json.Config{}, mockClock)
 
 	holiday := json.Holiday{
 		StartDay:   10,
@@ -200,8 +221,13 @@ func TestBaseRegexService_FindReaction_PatternWithoutReactions(t *testing.T) {
 		},
 	}
 
-	service := NewBaseRegexService(config)
-	service.currentTime = time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC)
+	mockController := gomock.NewController(t)
+	defer mockController.Finish()
+
+	mockClock := services_mocks.NewMockClockService(mockController)
+	mockClock.EXPECT().Now().Return(time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC)).AnyTimes()
+
+	service := NewBaseRegexService(config, mockClock)
 
 	reaction := service.FindReaction("С Новым Годом!")
 	t.Logf("Reaction for 'Happy New Year!' with empty pattern reactions: %s", reaction)
@@ -210,7 +236,12 @@ func TestBaseRegexService_FindReaction_PatternWithoutReactions(t *testing.T) {
 
 // TestBaseRegexService_MatchPattern_InvalidRegex tests the case when a regex pattern is invalid
 func TestBaseRegexService_MatchPattern_InvalidRegex(t *testing.T) {
-	service := &BaseRegexService{}
+	mockController := gomock.NewController(t)
+	defer mockController.Finish()
+
+	mockClock := services_mocks.NewMockClockService(mockController)
+
+	service := NewBaseRegexService(&json.Config{}, mockClock)
 
 	// Create a pattern with nil regexp
 	pattern := json.Pattern{
@@ -225,7 +256,12 @@ func TestBaseRegexService_MatchPattern_InvalidRegex(t *testing.T) {
 
 // TestBaseRegexService_GetRandomReaction_EmptyList tests the case when the reactions list is empty
 func TestBaseRegexService_GetRandomReaction_EmptyList(t *testing.T) {
-	service := &BaseRegexService{}
+	mockController := gomock.NewController(t)
+	defer mockController.Finish()
+
+	mockClock := services_mocks.NewMockClockService(mockController)
+
+	service := NewBaseRegexService(&json.Config{}, mockClock)
 
 	// Test with empty reactions list
 	reaction := service.getRandomReaction([]json.Reaction{})

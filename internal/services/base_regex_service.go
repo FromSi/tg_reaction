@@ -9,14 +9,14 @@ import (
 )
 
 type BaseRegexService struct {
-	config      *json.Config
-	currentTime time.Time
+	config       *json.Config
+	clockService ClockService
 }
 
-func NewBaseRegexService(config *json.Config) *BaseRegexService {
+func NewBaseRegexService(config *json.Config, clockService ClockService) *BaseRegexService {
 	return &BaseRegexService{
-		config:      config,
-		currentTime: time.Now(),
+		config:       config,
+		clockService: clockService,
 	}
 }
 
@@ -76,7 +76,7 @@ func (receiver *BaseRegexService) matchPattern(text string, pattern json.Pattern
 
 // getCurrentHoliday returns the current holiday if we are in a holiday period
 func (receiver *BaseRegexService) getCurrentHoliday() (*json.Holiday, string) {
-	now := receiver.currentTime
+	now := receiver.clockService.Now()
 	currentDay := now.Day()
 	currentMonth := int(now.Month())
 
