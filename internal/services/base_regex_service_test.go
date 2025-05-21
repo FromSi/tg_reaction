@@ -139,7 +139,7 @@ func TestBaseRegexService_FindReaction_Holiday(t *testing.T) {
 		"Should use holiday reactions for everyday patterns during holiday period")
 
 	// Testing outside holiday period (using the same service and mock)
-	
+
 	nonHolidayDate := time.Date(2023, 6, 1, 12, 0, 0, 0, time.UTC)
 	mockClock.EXPECT().Now().Return(nonHolidayDate).Times(2)
 
