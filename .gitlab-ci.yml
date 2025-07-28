@@ -5,7 +5,7 @@ workflow:
 
 variables:
   HARBOR_LIBRARY: ${HARBOR_HOST}/library
-  HARBOR_IMAGE: ${HARBOR_HOST}/apps/${CI_PROJECT_NAME}
+  HARBOR_IMAGE: ${HARBOR_HOST}/common-apps/${CI_PROJECT_NAME}
 
 stages:
   - test
@@ -36,27 +36,48 @@ build_image:
   after_script:
     - docker logout $HARBOR_HOST
 
-deploy_production:
+.deploy_docker_compose:
   image: kroniak/ssh-client
-  stage: deploy
   variables:
+    ENVIRONMENT: ENVIRONMENT_PLACEHOLDER
+    SSH_WORKDIR: /srv/${CI_PROJECT_NAME}
+    SSH_DEPLOY_HOST: ${DEPLOY_HOST}
+    SSH_DEPLOY_USER: ${DEPLOY_USER}
+    SSH_DEPOLOY_PRIVATE_KEY: ${DEPLOY_PRIVATE_KEY}
     GIT_STRATEGY: none
-  needs:
-    - build_image
   dependencies:
+    - build_image
+  needs:
     - build_image
   script:
     - echo --------------SSH--------------
     - eval $(ssh-agent -s)
-    - echo "$DEPLOY_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - echo "$SSH_DEPOLOY_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan "$TGR_DEPLOY_HOST" >> ~/.ssh/known_hosts
+    - ssh-keyscan "$SSH_DEPLOY_HOST" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
     - echo --------------Deploy--------------
-    - ssh "$DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker pull ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}"
-    - ssh "$DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker rm -f ${CI_PROJECT_NAME} &>/dev/null && echo 'Removed old container'"
-    - ssh "$DEPLOY_USER"@"$TGR_DEPLOY_HOST" "docker run --rm --detach --name ${CI_PROJECT_NAME}
+    - ssh "$SSH_DEPLOY_USER"@"$SSH_DEPLOY_HOST" "docker pull ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}"
+    - ssh "$SSH_DEPLOY_USER"@"$SSH_DEPLOY_HOST" "docker rm -f ${CI_PROJECT_NAME} &>/dev/null && echo 'Removed old container'"
+    - ssh "$SSH_DEPLOY_USER"@"$SSH_DEPLOY_HOST" "docker run --rm --detach --name ${CI_PROJECT_NAME}
         -e APP_TELEGRAM_TOKEN=\"${BOT_TOKEN}\"
         ${HARBOR_IMAGE}/app:${CI_COMMIT_SHA}"
+
+deploy_production:
+  stage: deploy
+  tags:
+    - infra-network
+    - deploy
+  extends: .deploy_docker_compose
+  when: manual
+  variables:
+    ENVIRONMENT: production
+    SSH_WORKDIR: /srv/${CI_PROJECT_NAME}
+    SSH_DEPLOY_HOST: ${DEPLOY_HOST_PRODUCTION}
+    SSH_DEPLOY_USER: ${INFRA_DEPLOY_SSH_USER}
+    SSH_DEPOLOY_PRIVATE_KEY: ${INFRA_DEPLOY_SSH_KEY}
+  environment:
+    name: production
   rules:
     - when: manual
+      allow_failure: true
