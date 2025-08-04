@@ -1,0 +1,8 @@
+global:
+  vault:
+    enabled: false
+redis:
+  enabled: false
+ingress:
+  enabled: false
+secretName: tg-reactions-env
