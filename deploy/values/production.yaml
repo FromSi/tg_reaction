@@ -5,4 +5,6 @@ redis:
   enabled: false
 ingress:
   enabled: false
+probes:
+  enabled: false
 secretName: tg-reactions-env
