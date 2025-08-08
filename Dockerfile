@@ -16,4 +16,7 @@ WORKDIR /app
 COPY --from=build /app/myapp .
 COPY --from=build /app/config.json .
 
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD pgrep -f "/app/myapp" > /dev/null || exit 1
+
 ENTRYPOINT ["/app/myapp"]
